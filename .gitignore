@@ -1,0 +1,19 @@
+# Dependencies and build output (recreated by npm install / npm run build)
+node_modules/
+dist/
+build/
+coverage/
+
+# Local database and uploaded files (created at run time)
+flowguard/data/
+
+# Secrets and local tool settings
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# OS / logs
+*.log
+.DS_Store
+Thumbs.db

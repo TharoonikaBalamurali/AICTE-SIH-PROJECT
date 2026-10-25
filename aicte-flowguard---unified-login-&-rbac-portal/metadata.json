@@ -1,0 +1,6 @@
+{
+  "name": "AICTE FlowGuard - Unified Login & RBAC Portal",
+  "description": "Unified Approval Workflow & Compliance Management Portal with server-enforced role-based access control, institutional data isolation, and comprehensive audit governance for SIH26262.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

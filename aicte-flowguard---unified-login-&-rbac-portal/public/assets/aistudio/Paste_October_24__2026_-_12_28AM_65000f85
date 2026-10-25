@@ -1,0 +1,1179 @@
+# MASTER IMPLEMENTATION PROMPT
+# AICTE FlowGuard — Institutional Dashboard and End-to-End Application Tracking
+## SIH26262 | Fresh Project | Applicant-Side Workflow
+
+Build the complete Institutional Dashboard for AICTE FlowGuard, a prototype for SIH problem statement SIH26262.
+
+This is a fresh implementation. Do not assume that previous code, databases, APIs, authentication modules or dashboards exist.
+
+The institutional dashboard is the applicant-facing workspace through which an institution representative files applications, uploads supporting documents, receives deficiency notices, tracks every processing stage, coordinates with AICTE through the simulated workflow, receives decisions and uses permitted appeal procedures.
+
+Implement a functional application, not just a static dashboard mockup.
+
+---
+
+# PART 1 — MANDATORY REGULATORY AND ENGINEERING RULES
+
+## 1.1 Source of truth
+
+Use the attached AICTE Approval Process Handbook 2024–2027 (APH) as the primary regulatory source.
+
+Also use the attached AICTE APH Document Requirements Matrix as a working index, but verify each requirement against the actual handbook before implementing it.
+
+For every regulatory requirement, preserve:
+- Exact APH chapter, clause, annexure, table or format reference.
+- Requirement text and its intended meaning.
+- Application categories to which it applies.
+- Mandatory versus conditional applicability.
+- Required issuing authority or signatory, where specified.
+- Validity or deadline, where explicitly specified.
+- Applicable workflow stage.
+- Source version and verification status.
+
+Do not invent documents, validity periods, deadlines, committee routes, rejection conditions or statutory powers.
+
+If the handbook refers to another chapter, annexure, UGC rule, government provision, prescribed format or AICTE portal form, mark that dependency and verify it before declaring the checklist complete.
+
+If the supplied APH does not provide enough information, mark the requirement `NEEDS_VERIFICATION`. Do not fill the gap using assumptions.
+
+Clearly distinguish:
+1. Explicit APH requirement.
+2. Conditional APH requirement.
+3. Software workflow decision.
+4. Operational reminder configured by an authorised administrator.
+5. Unresolved regulatory interpretation.
+
+The deterministic rules engine must execute only verified and approved regulatory rules.
+
+## 1.2 Human authority
+
+The software may automatically check completeness, dates, file metadata, structured field consistency and permitted workflow transitions.
+
+It must not automatically:
+- Decide statutory approval or rejection.
+- Replace EVC expert judgement.
+- Determine infrastructure suitability from an uploaded file alone.
+- Fabricate committee findings.
+- Invent an LoA, LoR or LoD.
+- Treat document upload as proof of substantive compliance.
+- Route every application through every committee.
+
+All statutory decisions and expert findings must be recorded by authorised human officials.
+
+## 1.3 Technology
+
+Use:
+- React 18+ and TypeScript.
+- Tailwind CSS.
+- The supported Node.js server-side runtime in Google AI Studio.
+- Supabase PostgreSQL for persistent data.
+- Supabase Auth or an appropriately configured secure authentication provider.
+- Supabase Storage for documents and evidence.
+- Server-side authorization and row-level data protection.
+- A deterministic, versioned Python-independent or TypeScript-based rule engine appropriate to the selected backend runtime.
+
+Keep the architecture modular so a separate FastAPI service can be introduced later if required.
+
+Never place privileged credentials in browser code.
+
+If credentials or external integrations are not configured, show explicit integration status and setup instructions. Do not pretend that a simulated operation is connected to the real AICTE portal.
+
+---
+
+# PART 2 — UNIFIED INSTITUTIONAL DASHBOARD
+
+## 2.1 After login
+
+The existing unified login concept must authenticate the user and establish the trusted role `INSTITUTION_APPLICANT`.
+
+After successful authentication, redirect the user to the Institutional Dashboard.
+
+Do not let the applicant select their own privileged role.
+
+The institution representative must only access records associated with their authorised institution and permitted applications.
+
+## 2.2 Dashboard layout
+
+Create a professional government-enterprise interface with:
+
+### Sidebar
+- Dashboard Overview
+- Institution Profile
+- Start New Application
+- My Applications
+- Document Centre
+- Deficiency Notices
+- Re-scrutiny Updates
+- EVC Visit Schedule
+- EVC Information
+- Decisions and Official Communications
+- Appeals
+- Compliance and Undertakings
+- Notifications
+- Audit / Application Activity
+- Help and Support
+- Logout
+
+Show only applicable features and information.
+
+### Dashboard summary cards
+- Total Applications
+- Draft Applications
+- Submitted Applications
+- Under Scrutiny
+- Deficiencies Requiring Action
+- Under Re-scrutiny
+- Awaiting EVC
+- EVC Visit Scheduled
+- Awaiting Post-EVC Review
+- Awaiting Authorised Decision
+- Decisions Issued
+- Appeals Pending
+- Compliance Actions Due
+
+Counts must come from the database. If demonstration data is used, label it clearly as sample data.
+
+### Main application table
+
+Show:
+- Application ID.
+- Institution name.
+- Application type.
+- Submission timestamp.
+- Submitted by.
+- Current processing status.
+- Current stage.
+- Responsible department or role, when disclosure is permitted.
+- Latest official update.
+- Next action required.
+- Deficiency deadline, if applicable.
+- Last modified timestamp.
+- View Details action.
+
+Provide search, filtering, sorting and pagination.
+
+Allow filters for application type, application ID, date range, current stage, status, deficiencies and deadlines.
+
+---
+
+# PART 3 — INSTITUTION PROFILE AND APPLICATION CREATION
+
+## 3.1 Institution information form
+
+Before starting the first application, collect and validate:
+
+1. Official name of institution.
+2. Complete registered/institutional address.
+3. State and district.
+4. Institution or college ID, as applicable.
+5. Applicant's full name.
+6. Applicant's designation.
+7. Official email address.
+8. Official contact number, if required by the configured form.
+9. Authorised signatory details, where applicable.
+10. Trust/Society/Company or sponsoring organisation details, where applicable.
+
+Store profile information separately from application-specific information.
+
+Prefill verified institution details into later applications, but allow changes only through the appropriate authorised process.
+
+Do not assume every field is mandatory under APH. Mark fields required by the software for identification separately from fields explicitly prescribed by the APH.
+
+Validate email syntax and required fields. Do not treat a syntactically valid email as proof of official ownership; use a configured verification mechanism if available.
+
+## 3.2 Start New Application page
+
+The applicant must be able to choose an application type using BOTH:
+- A searchable text box.
+- A dropdown list containing the 22 categories defined in Part 4.
+
+Allow partial search by category name and relevant keywords.
+
+Show each category with:
+- Application type.
+- Short description.
+- APH reference.
+- Document checklist preview.
+- Applicable process stages, where verified.
+- Important prerequisites.
+- Whether regulatory verification is complete.
+
+Do not allow an application to be submitted using an unverified regulatory checklist. The applicant may save a draft while unresolved items are being reviewed.
+
+After the applicant selects a category, dynamically load the relevant form fields and document requirements.
+
+Do not display the same generic checklist for all 22 categories.
+
+---
+
+# PART 4 — THE 22 APPLICATION CATEGORIES AND DOCUMENT REQUIREMENTS
+
+Implement the following 22 application categories. These are a project-level catalogue that separates several grouped APH routes into distinct user choices. Preserve the source mapping to APH Table 2.3 and the relevant annexures.
+
+The requirements below are a starting checklist derived from the handbook analysis. Verify every item against the attached PDF before approving it for execution.
+
+## Application 1: Extension of Approval (EoA) — Self-Disclosure
+
+Source: Annexure 2, Section 2.1, and applicable Chapter I/II/VI provisions.
+
+Checklist:
+- Affidavit 2, digitally signed by the Chairman/Secretary of the Trust, Society or Company for self-financing institutions, or the authorised person for Government/Government-aided institutions.
+- AICTE portal payment receipt for the relevant academic year, if any.
+- Valid Occupancy Certificate, Completion Certificate, Building License or Form D, as applicable.
+- Valid Structural Stability Certificate from a registered Structural Engineer when the building is more than 30 years from issue of the Completion Certificate.
+- Valid Fire Safety Certificate.
+- Satellite map showing geographical location of the land, including latitude and longitude at the entrance of the main building.
+- Audited statement of accounts of the Trust/Society/Company for the previous year.
+- For qualifying Government buildings older than 50 years where original documents cannot be submitted, the competent-authority letter described in the APH confirming that building norms are fulfilled.
+
+Do not impose a universal Fire Safety Certificate expiry period unless an applicable authoritative source specifies it.
+
+## Application 2: Introduction or Continuation of NRI Seats
+
+Source: Annexure 2, Section 2.2.
+
+Checklist:
+- Trust/Society/Company resolution approving the introduction of seats for children of NRIs.
+- Resolution in prescribed Format 3.
+- Signature of the prescribed Chairman/Secretary.
+
+Verify whether additional documents are required for continuation rather than introduction.
+
+## Application 3: Diploma-to-Degree or Degree-to-Diploma Conversion
+
+Source: Annexure 2, Section 2.3, and applicable Chapter II provisions.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2.
+- Trust/Society/Company resolution in Format 3 approving the applicable conversion.
+- Signature of the prescribed Chairman/Secretary.
+- State Government NOC where the relevant APH provision requires it before the academic session.
+- Additional documents only where a verified APH clause makes them applicable.
+
+Do not automatically require all Annexure 1 documents for this category; Annexure 2, Section 2.3 specifically states that all Annexure 1 documents apply to Change of Site/Location.
+
+## Application 4: Change of Institution Name
+
+Source: Annexure 2, Section 2.10, and Chapter I, Sections 1.5.4 and 1.5.5.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2, or the official-sealed receipt permitted by the APH as proof of submission to the affiliating body.
+- Trust/Society/Company resolution approving the institution name change in Format 3.
+- Signature of the prescribed Chairman/Secretary.
+- Applicable conditions under Chapter I, Sections 1.5.4 and 1.5.5.
+
+## Application 5: Introduction of a New Programme or Level
+
+Source: Annexure 2, Section 2.3 and the applicable Chapter II/III provisions.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2.
+- Trust/Society/Company resolution in Format 3 approving the proposed programme or level.
+- Allocation of land, building and funds where required by the prescribed resolution.
+- State Government NOC where specifically applicable.
+- Other programme-specific prerequisites from the relevant APH chapter or annexure.
+
+Generate the checklist only after resolving the applicable programme, level and institution type.
+
+## Application 6: Merger of Institutions
+
+Source: Annexure 2, Section 2.4, and Chapter II, Clause 2.10.2(b).
+
+Checklist:
+- Applicable Annexure 2 documents, subject to the explicit exception in Chapter II, Clause 2.10.2(b).
+- NOC from affiliating University/Board in Format 2.
+- Trust/Society/Company resolution approving merger in Format 3.
+- Applicable legal merger documents required under Government norms when different Trusts/Societies/Companies are involved.
+
+Evaluate the exception deterministically only after the relevant clause has been verified.
+
+## Application 7: Break in EoA, Restoration or Hibernation
+
+Source: Annexure 2, Section 2.1, and the applicable Chapter II provisions.
+
+Use the self-disclosure checklist from Application 1 where the relevant APH route requires it:
+- Affidavit 2 with the prescribed signatory and digital signature.
+- Applicable portal payment receipt, if any.
+- Valid occupancy/completion/building document.
+- Structural Stability Certificate when the age condition applies.
+- Valid Fire Safety Certificate.
+- Satellite map with latitude/longitude.
+- Audited previous-year accounts.
+- Government-building exception letter where the stated conditions apply.
+
+The APH distinguishes routes and conditions; verify which documents and actions apply to the specific break/restoration/hibernation case.
+
+## Application 8: Introduction of FN/OCI/Gulf Children Supernumerary Seats
+
+Source: Annexure 2, Section 2.5.
+
+Checklist:
+- Details of hostel facilities.
+- Details of hostel administration.
+- Format 3 resolution approving introduction of supernumerary seats.
+- Signature of the prescribed Chairman/Secretary.
+- Office of International Affairs (OIA) coordination where required.
+
+## Application 9: Increase in Intake or Additional Courses
+
+Source: Annexure 2, Section 2.6, and relevant programme-specific provisions.
+
+Checklist:
+- Affidavit 8 on ₹100 non-judicial/e-stamp paper, sworn before a First Class Judicial Magistrate, Notary or Oath Commissioner, subject to the APH exception for Extended EoA.
+- Format 3 resolution approving additional courses/divisions and allocation of land, building and funds, signed by the prescribed Chairman/Secretary.
+- Additional documents and programme-specific requirements verified from the applicable APH provisions.
+
+Do not apply the Affidavit 8 requirement where the handbook explicitly exempts the case.
+
+## Application 10: Integrated or Dual Degree Programme
+
+Source: Annexure 2, Section 2.6, and applicable programme provisions.
+
+Checklist:
+- Affidavit 8 with the prescribed form, stamp value and attestation, subject to applicable exceptions.
+- Format 3 resolution approving the programme and allocation of required resources.
+- Other programme-specific requirements expressly prescribed by the applicable APH provisions.
+
+## Application 11: Introduction or Continuation of FPM
+
+Source: Annexure 2, Section 2.6, and applicable FPM provisions.
+
+Checklist:
+- Affidavit 8, subject to the Extended EoA exception where applicable.
+- Format 3 resolution approving the relevant programme and allocation of resources.
+- Proof of faculty holding Ph.D./Fellow qualifications according to the number of seats, as prescribed by the APH.
+- Other FPM-specific documents required by the relevant APH provisions.
+
+## Application 12: Change of Course Name, Merger, Reduction or Closure of Courses
+
+Source: Annexure 2, Section 2.9, and Chapter II, Section 2.18.
+
+Checklist:
+- Format 3 resolution approving the change of course name, merger, reduction or closure.
+- For closure of a programme/course, NOC from affiliating University/Board in Format 2 with clear arrangements for existing students.
+- Any additional documents required by the relevant APH provision.
+
+For course/programme closure, track the validity period specified in Chapter II, Section 2.18(f): the application is valid for the duration of the respective course, with mandatory documents submitted during that duration.
+
+Do not apply closure-only documents to a name-change application unless the APH requires them.
+
+## Application 13: Collaboration and Twinning
+
+Source: Annexure 2, Section 2.14, and Chapter III, Section 3.2.
+
+Checklist:
+- Foreign partner's authorised-signatory letter confirming recognition/equivalence of the qualification awarded in India in the parent country.
+- Trustee letter specifying fees and intake per course.
+- Trustee and foreign-partner letter covering admissions, entry qualification, fees, examinations/evaluation and compliance with parent-country procedures.
+- Trustee letter specifying semesters conducted in India and the foreign country.
+- MoU/bipartite agreement between foreign partner and Indian partner.
+- MoU/bipartite agreement between Indian institution and affiliating University/Board.
+- Affidavit 11, including arrangements for students unable to obtain visas.
+- Attested evidence that the foreign partner offers the similar degree/diploma in its parent country.
+- Foreign partner letter stating that the degree is awarded only in the parent country.
+- Valid NBA certificate or NIRF ranking within the Top 200 for the relevant course(s), as specified.
+- Format 3 resolution approving the programme, signed by the prescribed Chairman/Secretary.
+
+Do not invent a universal expiry period for MoUs or letters. Apply the source-specific validity and current applicable conditions.
+
+## Application 14: Change of Site or Location
+
+Source: Annexure 2, Section 2.3, and Chapter II, Section 2.17.
+
+Checklist:
+- All Annexure 1 documents as explicitly required for Change of Site/Location.
+- NOC from affiliating University/Board in Format 2.
+- Trust/Society/Company resolution approving the site change in Format 3.
+- Relevant land, building, ownership/lease, approved plan, occupancy/completion, fire-safety and other documents applicable under Annexure 1.
+- Additional requirements of Chapter II, Section 2.17.
+
+The system must distinguish documents required for the new site from documents applicable only to particular land/building ownership or lease arrangements.
+
+Track EVC verification of infrastructure and any subsequent Council approval required before shifting movable equipment/library resources, as applicable.
+
+## Application 15: Closure of an Institution
+
+Source: Annexure 2, Section 2.7.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2, including provisions/alternative arrangements for existing students.
+- Latest salary sheet showing pay scale, gross pay, PF deduction and TDS for faculty and non-teaching staff.
+- Faculty:student ratio.
+- Details of RPGF/Joint FDR with AICTE.
+- Status of existing students.
+- Status of existing faculty/staff and liabilities.
+- Affidavit 4 on ₹100 non-judicial/e-stamp paper, sworn before the prescribed authority, stating there is no liability relating to faculty, staff or students.
+- Pending court cases, serious charges, norm violations and pending ragging cases.
+- Format 3 resolution approving closure, signed by the prescribed Chairman/Secretary.
+
+Do not confuse complete institution closure with closure of selected programmes/courses.
+
+## Application 16: Conversion Between Women's Institution and Co-educational Institution
+
+Source: Annexure 2, Section 2.3, and applicable Chapter II provisions.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2.
+- Format 3 resolution approving the applicable conversion.
+- State Government NOC where the relevant APH provision requires it.
+- Any additional documents specifically prescribed for the direction of conversion and institution type.
+
+## Application 17: Closure of Programme(s)/Course(s)
+
+Source: Annexure 2, Section 2.9, and Chapter II, Section 2.18.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2.
+- Clear arrangements for existing students.
+- Format 3 resolution approving closure, signed by the prescribed Chairman/Secretary.
+- Any other documents expressly required by the applicable APH clause.
+
+Track the course-duration application validity specified by the handbook. Do not treat this as complete institution closure.
+
+## Application 18: Change of Bank Details
+
+Source: Annexure 2, Section 2.12.
+
+Checklist:
+- Notarised Affidavit 9 from Chairperson/Secretary stating the reasons for change.
+- Format 3 resolution approving the bank-detail change.
+- If the change is due to bank merger, the NOC/certificate from the bank confirming the merger, subject to the relevant Government notification.
+
+Treat bank information as sensitive. Restrict access to authorised roles, mask sensitive account details in general dashboards and record access to such records.
+
+## Application 19: Change of Trust/Society/Company Name or Address
+
+Source: Annexure 2, Section 2.13, and applicable Chapter I provisions.
+
+Checklist:
+- Approval from the Charity Commissioner, Registrar of Societies or Registrar of Companies, as applicable, for name/address change or merger.
+- Notarised Affidavit 10 from Chairman/Secretary stating that there is no commercial/business angle.
+- Certified registration document listing members, objectives, Memorandum of Association and Rules.
+- Details of recommended Board of Governors according to Annexure 17, where applicable.
+- For Section 8 companies, MoA/Rules showing the prescribed non-profit objective and use of surplus only for institutional development.
+- Land documents/lease deeds showing ownership in the new entity name.
+- For merger, registered transfer/conveyance deed transferring land/assets/infrastructure to the transferee.
+- Working capital evidence under Chapter I, Section 1.5.3: applicable FDs or latest bank statement in the new entity name at a recognised Nationalised/Scheduled Commercial Bank, plus Bank Manager certificate.
+- Approval regarding changes to trustee/member names, where applicable.
+- Format 3 resolution stating reasons and signed by the prescribed Chairman/Secretary.
+
+Apply conditional requirements only when the corresponding legal entity and transaction conditions apply.
+
+## Application 20: Change of Institution Type / Conversion into a University
+
+Source: Annexure 2, Section 2.8, and applicable Chapter IV/UGC provisions.
+
+Checklist:
+- NOC from affiliating University/Board in Format 2.
+- Format 3 resolution approving the change of type/conversion and related course arrangements, where applicable.
+- Applicable Chapter IV and UGC-related requirements when relevant.
+- Additional legal and institutional documents only after verifying the applicable provisions.
+
+Annexure 2, Section 2.8 contains an exception concerning Affidavit 2 for change of type. Do not impose that affidavit contrary to the APH's explicit exception.
+
+## Application 21: ODL/OL Courses
+
+Source: Applicable Chapter V provisions and relevant UGC-linked requirements.
+
+The document checklist must be extracted and verified directly from the APH and any expressly referenced authoritative regulations/forms before implementation.
+
+Do not reuse a generic Annexure 2 checklist and claim it is complete.
+
+Until clause-level verification is completed:
+- Mark the checklist `NEEDS_VERIFICATION`.
+- Show the applicant that the requirements are being configured.
+- Allow a draft to be saved.
+- Do not enable final submission against an unapproved checklist.
+
+## Application 22: Establishment of a New Technical Institution
+
+Source: Annexure 1, applicable Chapter I provisions, and other applicable provisions.
+
+### A. Scrutiny-stage documents
+
+Include the following checklist, with conditional branches:
+
+1. Building Plan, Certificate 2, prepared by an architect registered with the Council of Architecture or a Licensed Surveyor under Certificate 1, approved by the competent State/UT authority; two copies where prescribed.
+2. Affidavit 2 on ₹100 non-judicial/e-stamp paper, sworn before a First Class Judicial Magistrate, Notary or Oath Commissioner.
+3. Applicant organisation resolution in Format 3.
+4. Occupancy Certificate, Completion Certificate, Building License or Form D, as applicable. If the building is incomplete, apply the relevant APH undertaking and later-submission conditions.
+5. Valid Fire Safety Certificate.
+6. Certificate 3 from the Bank Manager regarding financial status.
+7. Hard copy of the complete application as uploaded to the AICTE portal, where prescribed.
+8. Certified registration documents of the Trust/Society/Company/PPP/BOT organisation, including members, objectives, MoA and Rules.
+9. For standalone PGDM, recommended Board of Governors composition under Annexure 17, where applicable.
+10. For Section 8 companies, MoA/Rules satisfying the prescribed non-profit and institutional-development conditions.
+11. For PPP/BOT, resolution concerning establishment and allocation of land/building/funds.
+12. Land ownership evidence in the applicant organisation's name: registered settlement/sale/gift deed or permitted irrevocable registered Government/private lease.
+13. Applicable land/lease duration evidence and Joint Affidavit 7 where required.
+14. Notarised English translation of vernacular land documents, where applicable.
+
+### B. Conditional private land lease documents
+
+Where private land lease is applicable, provide the checklist for:
+- Original registered lease.
+- Land conversion certificate.
+- Lessor title documents.
+- Encumbrance Certificate within the source-prescribed timing.
+- Lessor organisation resolution, where applicable.
+- Registered right to assign lease in a sublease case, where applicable.
+- Compliance with the applicable restriction on mortgaging land.
+
+Apply the handbook's specific land/lease validity conditions. Do not treat all land arrangements as identical.
+
+### C. Conditional private building lease documents
+
+Where the building is privately leased, generate the applicable requirements for:
+- Approved complete Building Plan and detailed leased-floor plans where only part of a building is leased.
+- Occupancy/Completion Certificate.
+- Land title/leasehold documents.
+- Registered building lease.
+- Valid Fire Safety Certificate.
+- Land Use Certificate for educational purpose.
+- Topographical sketch/village map with survey numbers and road map.
+- Floor plans, sections, elevations and room/carpet-area table certified by a COA-registered architect.
+- Working capital evidence, including applicable FD/latest bank statement and Bank Manager certificate.
+- Audited accounts for the last three years where applicable.
+- Minority status certificate, where applicable.
+- Detailed Project Report.
+- Undertaking concerning a high-tension line or prescribed safety certificate if relevant.
+- Government-building exception letter, where the specified conditions apply.
+
+### D. EVC-stage evidence and records
+
+Where required by the applicable APH process, track:
+- Recruitment advertisement in at least one National Daily for Principal/Director and faculty.
+- Internet bandwidth evidence in Mbps.
+- List of library titles and volumes.
+- Invoices/cash memos for equipment and library books.
+- Journal subscription details under Annexure 4.
+- Sanctioned electrical load.
+- Architect certificate for sewage disposal, barrier-free environment, accessible toilets and all-weather motorable approach roads.
+- Details of other educational institutions operated by the same Trust/Society/Company.
+- Approximately 30-minute institutional facilities video uploaded to YouTube and the URL provided through the prescribed portal process.
+
+### E. Post-Letter of Approval requirements
+
+Track faculty and Principal/Director appointments and prescribed staff information after LoA, according to the applicable APH provisions. Do not allow the software to imply that the institution may commence courses before required appointments and other prerequisites are satisfied.
+
+Track the LoA validity of two academic years where the applicable APH provision prescribes it.
+
+---
+
+# PART 5 — DOCUMENT UPLOAD AND VALIDATION ENGINE
+
+## 5.1 Dynamic checklist
+
+For each selected application, display a table containing:
+
+- Document ID.
+- Document name.
+- APH reference.
+- Mandatory/conditional status.
+- Applicability reason.
+- Accepted file formats and configured size limit.
+- Required issuing authority/signatory, where specified.
+- Issue date, where relevant.
+- Expiry date, where applicable.
+- Submission status.
+- Validation status.
+- Uploaded filename.
+- Upload timestamp.
+- Version number.
+- Reviewer remarks.
+- Deficiency status.
+
+Allow the applicant to upload only permitted file formats and validate file type and size on the server.
+
+Use private storage and signed download URLs with appropriate expiry. Never expose public URLs for sensitive documents.
+
+## 5.2 Document statuses
+
+Use clearly defined states:
+- NOT_UPLOADED
+- UPLOADED
+- AWAITING_VALIDATION
+- VALIDATION_IN_PROGRESS
+- VERIFIED
+- DEFICIENCY_FOUND
+- REPLACEMENT_REQUESTED
+- REPLACEMENT_SUBMITTED
+- REVALIDATION_PENDING
+- ACCEPTED_FOR_WORKFLOW
+- REQUIRES_HUMAN_REVIEW
+
+Do not equate a file being uploaded with the document being verified or accepted.
+
+## 5.3 Deterministic validation
+
+Where the relevant data is available, check:
+- Presence of required documents.
+- Allowed file type and size.
+- Required structured metadata.
+- Applicable issue/expiry date rules.
+- Required digital-signature status through a supported verification mechanism.
+- Institution/application identifiers where reliably available.
+- Differences between declared structured fields and stored records.
+- Duplicate submissions.
+- Conditional requirements.
+
+Do not claim that scanned signatures are cryptographically verified merely because a signature image is visible.
+
+If automated extraction of a scanned document is introduced, treat extracted values as untrusted until checked against deterministic validation and human review. No generative AI may determine regulatory compliance.
+
+---
+
+# PART 6 — APPLICATION ID AND SUBMISSION RECORD
+
+## 6.1 Application ID
+
+Generate a unique server-side application ID for each application, for example:
+
+`FG-2026-000001`
+
+This is a software identifier, not an official AICTE application number.
+
+Never rely on a browser-generated identifier or use a predictable ID as an authorization mechanism.
+
+## 6.2 Application submission record
+
+Every application must preserve:
+- Application ID.
+- Institution name and institution ID.
+- Application category.
+- Applicant name and authorised designation.
+- Official email address.
+- Submission date and timestamp, stored in UTC and displayed in the appropriate configured timezone.
+- Submitted-by user ID.
+- Current stage.
+- Current status.
+- Applicable rule/checklist version.
+- Submitted document versions.
+- Submission confirmation reference.
+- Audit history.
+
+The applicant should be able to download a submission summary/receipt generated by FlowGuard, clearly distinguished from any official AICTE receipt.
+
+After final submission, prevent silent editing of the submitted version. Handle corrections, replacements and reopenings only through permitted, auditable workflow actions.
+
+---
+
+# PART 7 — APPLICATION STATUS AND TIMELINE
+
+Display an application timeline with:
+- Event timestamp.
+- Stage name.
+- Event description.
+- Status before and after the event.
+- Responsible role or official identity where disclosure is permitted.
+- Action taken.
+- Applicant action required.
+- Deadline, if applicable.
+- Source of deadline.
+- Supporting communication reference.
+
+Example event types:
+- Draft created.
+- Application submitted.
+- Scrutiny started.
+- Deficiency issued.
+- Deficiency notification sent.
+- Replacement document submitted.
+- Re-scrutiny started.
+- EVC referral recorded.
+- EVC visit scheduled.
+- EVC visit completed.
+- EVC report submitted.
+- Post-EVC review started.
+- Clarification requested.
+- Clarification received.
+- Authorised decision recorded.
+- Decision communication issued.
+- Appeal submitted.
+- Appeal acknowledged.
+- Appeal assigned.
+- Appeal decision recorded.
+- Compliance undertaking created.
+- Compliance evidence submitted.
+- Compliance verified.
+
+These are system event types, not an assertion that every application passes through all of them.
+
+Provide an applicant-friendly status explanation. Do not expose confidential internal deliberations or unauthorised personal information.
+
+---
+
+# PART 8 — SCRUTINY AND DEFICIENCY NOTIFICATIONS
+
+When an authorised scrutiny official records a deficiency, the institution must receive a notification.
+
+Each deficiency record must include:
+- Deficiency ID.
+- Application ID.
+- Application category.
+- Stage where it was identified.
+- Document or field concerned.
+- Deficiency type.
+- Detailed explanation.
+- Exact APH reference, where applicable.
+- Whether the issue is regulatory, administrative or awaiting human verification.
+- Timestamp detected and timestamp communicated.
+- Responsible reviewer role.
+- Required corrective action.
+- Deadline and deadline source.
+- Current status.
+- Resubmission history.
+
+Supported deficiency types:
+- Missing document.
+- Expired/invalid document.
+- Incomplete document.
+- Signature/digital-signature issue.
+- Institution or application mismatch.
+- Inconsistent fields.
+- Incorrect format.
+- Conditional document not supplied.
+- Human verification required.
+
+The official must record a meaningful reason and, where applicable, the exact requirement that has not been met.
+
+Do not invent a correction deadline. If the APH does not prescribe the deadline, it must be set by an authorised official under an approved operational policy and clearly labelled accordingly.
+
+## 8.1 Deficiency resolution
+
+The applicant must be able to:
+1. Open the deficiency notice.
+2. Understand what is wrong and why.
+3. See the affected document or field.
+4. See the due date and issuing authority.
+5. Upload a corrected or missing document.
+6. Add a response note where permitted.
+7. Submit the response for re-scrutiny.
+8. View the response timestamp and re-scrutiny status.
+
+Preserve all previous document versions.
+
+## 8.2 Re-scrutiny
+
+When a correction is submitted:
+- Create a new document version.
+- Link it to the deficiency it addresses.
+- Route the case to the authorised re-scrutiny queue.
+- Revalidate only the changed documents and dependent rules, plus any other checks explicitly required by the applicable APH procedure.
+- Preserve the original scrutiny findings.
+- Record every new finding.
+
+If no further deficiency is recorded and the authorised official completes the relevant checks, route the application to the next applicable APH stage.
+
+Do not automatically forward an application merely because the uploaded files pass a technical validation.
+
+---
+
+# PART 9 — EVC VISIT AND INSTITUTION NOTIFICATIONS
+
+When an authorised EVC coordinator schedules a visit, display the following information to the institution as permitted:
+- Application ID.
+- Visit reference.
+- Institution name and address.
+- Visit type: physical or online.
+- Date and start/end time.
+- Timezone.
+- Location or authorised meeting details.
+- Committee-member names and designations, subject to applicable disclosure rules.
+- Visit agenda.
+- Preparation instructions.
+- Documents/evidence to make available.
+- Contact/coordination details where authorised.
+- Scheduling timestamp.
+- Rescheduling/cancellation status.
+- Updated visit details and reason for changes.
+
+Send notifications after authorised scheduling, rescheduling or cancellation.
+
+The institution should be able to acknowledge the visit notification, subject to configured policy.
+
+The EVC coordinator must manage member assignment and availability. The system must not fabricate member identities, availability or inspection outcomes.
+
+## 9.1 EVC evidence and report
+
+When the EVC completes the inspection, the institution dashboard may display permitted visit-status updates.
+
+Track:
+- Visit completed timestamp.
+- Report submission status.
+- Evidence received status.
+- Post-EVC review status.
+- Outstanding institution action, if any.
+
+Do not reveal restricted internal EVC deliberations or member-only records to applicants.
+
+---
+
+# PART 10 — POST-EVC REVIEW AND AUTHORISED DECISION
+
+After EVC report submission, the relevant authorised reviewer/authority workspace must be able to review:
+- Report completeness.
+- Checklist findings.
+- Evidence references.
+- Deterministic validation results.
+- Missing evidence.
+- Conflicting data.
+- Clarification requests.
+- Audit history.
+
+The institutional dashboard should show appropriate status updates without disclosing restricted internal material.
+
+## 10.1 Decision communication
+
+When an authorised competent authority records and releases a decision, display the actual recorded outcome and official communication.
+
+Support LoA, LoR and LoD as configurable decision/communication types only where their meaning and applicability are confirmed from the governing AICTE procedure.
+
+For each released decision, show:
+- Application ID and category.
+- Institution name.
+- Decision/communication type.
+- Decision status.
+- Decision date and timestamp.
+- Issuing authority/committee, where disclosure is permitted.
+- Official reference/communication number, if recorded.
+- Detailed reason/explanation recorded by the authority.
+- Conditions or undertakings, if any.
+- Compliance requirements and deadlines, where prescribed.
+- Appeal eligibility and applicable deadline.
+- Official document/communication attachment.
+- Available next actions.
+
+Never generate a fake approval letter, rejection letter or statutory decision. A prototype-generated sample document must be visibly marked as a simulation.
+
+Do not infer or automatically generate a decision reason from rule failures.
+
+---
+
+# PART 11 — APPEALS AND THE SEVEN-DAY WINDOW
+
+The APH states that an appeal to the Council must be made within seven days from the date the EC decision is uploaded, according to Chapter II, Section 2.24(a). Verify the exact provision and applicable route against the attached handbook before implementation.
+
+Implement the seven-day rule only for the decisions and appeal routes to which the provision applies.
+
+Do not calculate the appeal window from the notification-read timestamp or invent an alternative start date.
+
+The appeal module must store:
+- Original application ID.
+- Original decision reference.
+- Decision upload/publication timestamp.
+- Applicable appeal rule and version.
+- Calculated appeal deadline.
+- Deadline calculation details.
+- Appeal submission timestamp.
+- Grounds for appeal entered by the applicant.
+- Supporting evidence uploaded for the appeal.
+- Appeal receipt/reference.
+- Assigned authorised review body.
+- Appeal stage and status.
+- Hearing/meeting details if scheduled and applicable.
+- Official communication and final recorded outcome.
+
+Display a visible countdown while the appeal window is open, with the exact deadline and timezone.
+
+When the deadline has passed, disable ordinary submission only where the verified procedure requires it. Do not invent late-appeal exceptions or extensions.
+
+## 11.1 SHC and SAC routing
+
+Do not automatically route every appeal to both SHC and SAC in sequence.
+
+The APH contains distinct committee and decision pathways, including SHC-related compliance handling and SAC-related appeal handling. Implement the actual route for the specific decision/application type using verified APH provisions.
+
+The applicant should see:
+- Appeal received.
+- Appeal under authorised review.
+- Hearing or meeting scheduled, if applicable.
+- Further information requested.
+- Appeal decision issued.
+
+Committee assignments, schedules and decisions must be entered by authorised users.
+
+---
+
+# PART 12 — COMPLIANCE MONITORING
+
+Create a Compliance and Undertakings page showing:
+- Undertaking or condition reference.
+- Source of obligation.
+- Related application and decision.
+- Required action.
+- Required evidence.
+- Responsible institution role.
+- Due date and source.
+- Submission timestamp.
+- Verification status.
+- Outstanding deficiencies.
+- Reminder history.
+- Escalation history, where disclosure is permitted.
+
+Track document validity and time-bound undertakings only when the source provides the rule or an authorised operational policy establishes the deadline.
+
+Do not invent a universal expiry duration for certificates that the APH simply says must be valid.
+
+Where the system cannot determine validity confidently, display `REQUIRES_HUMAN_REVIEW`.
+
+---
+
+# PART 13 — NOTIFICATIONS
+
+Provide an in-app notification centre and a configurable email notification service.
+
+Notify the institution about:
+- Successful submission.
+- Application reference generation.
+- Scrutiny starting or progressing.
+- Deficiency issued.
+- Deadline approaching.
+- Deficiency response submitted.
+- Re-scrutiny outcome.
+- EVC scheduling/rescheduling/cancellation.
+- EVC completion.
+- Post-EVC clarification.
+- Decision issued.
+- Appeal-window opening and upcoming deadline.
+- Appeal status changes.
+- Compliance deadlines and verification results.
+
+Every notification must record:
+- Recipient.
+- Event.
+- Timestamp.
+- Delivery channel.
+- Delivery status.
+- Related application.
+- Relevant deadline, if applicable.
+
+Use idempotent event processing so retries do not create duplicate notifications.
+
+Clearly distinguish generated in-app notifications from successfully delivered email messages.
+
+---
+
+# PART 14 — DATABASE DESIGN
+
+Design a normalised Supabase/PostgreSQL schema with suitable foreign keys, indexes, constraints and timestamps.
+
+At minimum, include:
+
+1. institutions
+2. user_profiles
+3. institution_user_memberships
+4. application_types
+5. applications
+6. application_submissions
+7. aph_sources
+8. aph_rule_versions
+9. document_requirements
+10. document_submissions
+11. document_versions
+12. document_validation_results
+13. workflow_definitions
+14. workflow_transitions
+15. application_stage_history
+16. deficiency_notices
+17. deficiency_responses
+18. evc_visits
+19. evc_assignments
+20. evc_reports
+21. evc_evidence
+22. review_actions
+23. decision_records
+24. official_communications
+25. appeals
+26. compliance_obligations
+27. compliance_submissions
+28. notifications
+29. audit_events
+
+You may adjust the schema where necessary, but preserve the underlying responsibilities.
+
+Use immutable or append-only audit events for critical actions. Store document metadata and private storage references in the database rather than publicly accessible file URLs.
+
+Apply strict institution-level access controls. An institution user must not read, modify or download another institution's private records.
+
+Never trust institution IDs, role names or application IDs supplied by the browser without checking authorization server-side.
+
+---
+
+# PART 15 — APPLICATION WORKFLOW ENGINE
+
+Use explicit, configurable states rather than scattered frontend conditionals.
+
+Example states:
+- DRAFT
+- SUBMITTED
+- SCRUTINY_PENDING
+- SCRUTINY_IN_PROGRESS
+- DEFICIENCY_ISSUED
+- CORRECTION_SUBMITTED
+- RE_SCRUTINY_PENDING
+- RE_SCRUTINY_IN_PROGRESS
+- EVC_REFERRAL_PENDING
+- EVC_PENDING
+- EVC_SCHEDULED
+- EVC_COMPLETED
+- REPORT_REVIEW_PENDING
+- CLARIFICATION_PENDING
+- DECISION_PENDING
+- DECISION_ISSUED
+- APPEAL_SUBMITTED
+- APPEAL_UNDER_REVIEW
+- APPEAL_DECIDED
+- COMPLIANCE_PENDING
+- COMPLIANCE_COMPLETED
+- CLOSED
+
+These are proposed software states, not official APH terminology.
+
+Implement application-specific workflow definitions and permitted transitions. Not every application should pass through all states.
+
+For every transition:
+- Validate the current state.
+- Validate the actor's permissions.
+- Validate required prerequisites.
+- Execute applicable approved deterministic rules.
+- Record the actor, timestamp, action and reason.
+- Update the current status.
+- Create applicable tasks and notifications.
+- Preserve the history.
+
+Reject invalid transitions server-side.
+
+---
+
+# PART 16 — API DESIGN
+
+Implement documented server-side APIs for:
+- Institution profile creation/update.
+- Application category discovery/search.
+- Application draft creation.
+- Application detail retrieval.
+- Dynamic document checklist retrieval.
+- Secure document upload and download authorization.
+- Final application submission.
+- Application tracking timeline.
+- Deficiency notice retrieval.
+- Deficiency response and replacement-document submission.
+- Re-scrutiny status retrieval.
+- EVC visit information retrieval.
+- Decision and official communication retrieval.
+- Appeal eligibility and deadline calculation.
+- Appeal submission.
+- Compliance obligations and submissions.
+- Notification retrieval and acknowledgement.
+
+All write operations require server-side authentication and authorization.
+
+Applicants may submit documents and responses through permitted workflows but may not modify official review findings, decision records, workflow status or rule versions.
+
+---
+
+# PART 17 — USER INTERFACE QUALITY
+
+The interface must be:
+- Professional, clean and consistent.
+- Responsive on desktop, tablet and mobile.
+- Accessible, with clear labels and keyboard navigation.
+- Designed for lengthy regulatory forms and tables.
+- Consistent in terminology and status colours.
+- Equipped with helpful empty states, loading states and error messages.
+- Clear about the difference between a draft, submitted file, verified document and accepted workflow stage.
+
+Provide:
+- Searchable application selector.
+- Multi-step application form.
+- Save Draft.
+- Review Before Submission.
+- Submit Application confirmation.
+- Downloadable submission summary.
+- Document replacement workflow.
+- Timeline view.
+- Deficiency resolution centre.
+- EVC visit detail page.
+- Decision and appeal page.
+- Compliance tracker.
+
+Do not create a generic file-upload page disconnected from the application workflow.
+
+---
+
+# PART 18 — TESTING AND ACCEPTANCE CRITERIA
+
+Implement tests for:
+
+1. Institution profile creation and validation.
+2. Search and selection of all 22 application categories.
+3. Correct checklist retrieval for each category.
+4. Conditional document requirements.
+5. Application ID generation.
+6. Application submission timestamps and attribution.
+7. Secure document upload and version history.
+8. Missing-document detection.
+9. Expiry/validity checks where a rule exists.
+10. Signature verification status.
+11. Deficiency notification creation.
+12. Deadline-source traceability.
+13. Replacement-document submission.
+14. Re-scrutiny of changed documents and applicable dependencies.
+15. EVC scheduling and applicant notification.
+16. Report submission and post-EVC review.
+17. Authorised decision publication.
+18. Seven-day appeal calculation from the verified trigger event.
+19. Correct application-specific SHC/SAC/appeal routing.
+20. Compliance reminders.
+21. Role-based access and institution-level data isolation.
+22. Audit event integrity.
+23. Invalid transition rejection.
+24. Session expiry and unauthorized access.
+25. Notification retry/idempotency.
+
+Create sample data only for demonstration and label it as mock data.
+
+Do not mark an acceptance criterion complete unless its implementation and tests support that claim.
+
+---
+
+# PART 19 — IMPLEMENTATION ORDER
+
+Build incrementally in the following sequence:
+
+Phase 1: Institutional dashboard shell, navigation and profile form.
+
+Phase 2: Searchable 22-category application selector and application-specific form structure.
+
+Phase 3: Verified APH document requirements engine and secure document centre.
+
+Phase 4: Application submission, unique application ID, receipt and persistent timeline.
+
+Phase 5: Deficiency notifications, replacement documents and re-scrutiny workflow.
+
+Phase 6: EVC visit schedule, committee information and applicant notifications.
+
+Phase 7: Post-EVC review status and authorised decision communications.
+
+Phase 8: Appeal eligibility, seven-day deadline tracking and verified committee routing.
+
+Phase 9: Compliance monitoring, reminders and audit history.
+
+Phase 10: End-to-end security testing and usability refinement.
+
+Start with Phase 1 and establish a working application structure. Continue with the remaining phases using maintainable components, migrations and tests. Do not attempt to implement all phases in one giant unverified code generation.
+
+At the end of each phase, report:
+- Files created or modified.
+- Features actually implemented.
+- Database changes.
+- Configuration required.
+- Tests run and their actual results.
+- Unresolved APH questions.
+- Remaining tasks.
+
+FINAL GOAL:
+Deliver a functional, secure, traceable Institutional Dashboard that allows an authorised institution representative to file and track applications, resolve deficiencies, receive EVC and decision updates, submit eligible appeals and monitor compliance through one unified portal.
+
+The dashboard must automate administrative coordination and verified deterministic checks without replacing human statutory authority or claiming unauthorised integration with AICTE systems.
